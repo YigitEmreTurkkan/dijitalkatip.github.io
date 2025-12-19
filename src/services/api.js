@@ -6,8 +6,8 @@ export function createGeminiClient(apiKey) {
     throw new Error("API anahtarı bulunamadı.");
   }
 
-  // DÜZELTME 1: Gereksiz konfigürasyon kaldırıldı.
-  const genAI = new GoogleGenerativeAI(apiKey);
+  // ÖNEMLİ: 1.5 modelleri senin hesabında v1 endpoint üzerinden çalışıyor, v1beta 404 döndürüyor.
+  const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1" });
 
   const model = genAI.getGenerativeModel({
     model: MODEL_NAME, // "gemini-1.5-flash" olduğundan emin ol
