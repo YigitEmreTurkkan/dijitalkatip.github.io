@@ -1,10 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pages için gerekirse "base" alanını repo adına göre düzenleyebilirsin.
+// Bu repo bir "project page" olarak yayındaysa
+// nihai URL: https://yigitemreturkkan.github.io/dijitalkatip.github.io/
+// Vite'in asset yollarını doğru üretmesi için base ayarı:
 export default defineConfig({
   plugins: [react()],
-  // base: "/dijitalkatip.github.io/",
+  base: "/dijitalkatip.github.io/",
 });
 
 
