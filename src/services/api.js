@@ -6,12 +6,12 @@ export function createGeminiClient(apiKey) {
     throw new Error("API anahtarı bulunamadı.");
   }
 
-  // ÖNEMLİ: 1.5 modelleri senin hesabında v1 endpoint üzerinden çalışıyor, v1beta 404 döndürüyor.
-  const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1" });
+  // Google Generative AI SDK - varsayılan API versiyonunu kullanır
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   const model = genAI.getGenerativeModel({
-    model: MODEL_NAME, // "gemini-1.5-flash" olduğundan emin ol
-    systemInstruction: SYSTEM_PROMPT // Bu özellik için SDK'nın güncel olması şart
+    model: "gemini-2.0-flash",
+    systemInstruction: SYSTEM_PROMPT
   });
 
   async function sendMessage({ message, history }) {
