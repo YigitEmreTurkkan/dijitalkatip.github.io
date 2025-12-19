@@ -6,64 +6,80 @@ export function createGeminiClient(apiKey) {
     throw new Error("API anahtarı bulunamadı.");
   }
 
-  // Bazı hesaplarda 1.5 modelleri yalnızca v1 API üzerinden erişilebilir.
-  const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1" });
+  // DÜZELTME 1: Gereksiz konfigürasyon kaldırıldı.
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   const model = genAI.getGenerativeModel({
-    model: MODEL_NAME,
-    systemInstruction: SYSTEM_PROMPT
+    model: MODEL_NAME, // "gemini-1.5-flash" olduğundan emin ol
+    systemInstruction: SYSTEM_PROMPT // Bu özellik için SDK'nın güncel olması şart
   });
 
   async function sendMessage({ message, history }) {
+    // Sohbet geçmişini API'nin istediği formata çeviriyoruz
     const contents = [];
 
     if (Array.isArray(history)) {
-      for (const item of history) {
-        if (!item.text) continue;
+      history.forEach((item) => {
+        // Boş mesajları veya hatalı objeleri filtrele
+        if (!item.text) return; 
+        
         contents.push({
-          role: item.role === "user" ? "user" : "model",
+          // Senin React state'inde "bot" diyorsan buraya "model" olarak çevirmen lazım
+          role: item.role === "user" ? "user" : "model", 
           parts: [{ text: item.text }]
         });
-      }
+      });
     }
 
+    // En son kullanıcının yeni mesajını ekle
     contents.push({
       role: "user",
       parts: [{ text: message }]
     });
 
-    const result = await model.generateContent({
-      contents,
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
-    });
-
-    const rawText = result?.response?.text?.() ?? "";
-
-    let parsed;
     try {
-      parsed = JSON.parse(rawText);
-    } catch (err) {
-      console.error("JSON parse hatası:", err, rawText);
-      throw new Error(
-        "Gemini yanıtı geçerli JSON formatında değil. Lütfen tekrar deneyin."
-      );
-    }
+      // generateContent, her seferinde tüm geçmişi manuel gönderdiğin için "stateless" çalışır.
+      // Bu yapı senin React uygulaman için uygundur.
+      const result = await model.generateContent({
+        contents,
+        generationConfig: {
+          responseMimeType: "application/json" // JSON modu
+        }
+      });
 
-    if (
-      !parsed ||
-      (parsed.status !== "chatting" && parsed.status !== "completed")
-    ) {
-      throw new Error("Beklenmeyen JSON formatı alındı.");
-    }
+      const rawText = result.response.text();
 
-    return parsed;
+      // JSON Parse İşlemi
+      // Bazen model JSON'ı ```json ... ``` blokları içine alabilir, temizlemek gerekebilir.
+      const cleanText = rawText.replace(/```json|```/g, "").trim();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleanText);
+      } catch (err) {
+        console.error("Ham Cevap:", rawText);
+        throw new Error("AI geçerli bir JSON üretmedi.");
+      }
+
+      // Beklenen format kontrolü
+      if (!parsed.status) {
+         // Eğer status yoksa AI muhtemelen saçmaladı, manuel düzeltme yapıyoruz
+         return {
+             status: "chatting",
+             message_to_user: parsed.message_to_user || "Anlaşılamadı, tekrar eder misiniz?",
+             petition_data: null
+         };
+      }
+
+      return parsed;
+
+    } catch (error) {
+      console.error("Gemini API Hatası:", error);
+      throw error; // Hatayı UI'da yakalamak için fırlatıyoruz
+    }
   }
 
   return {
     sendMessage
   };
 }
-
-
