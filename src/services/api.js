@@ -6,7 +6,8 @@ export function createGeminiClient(apiKey) {
     throw new Error("API anahtarı bulunamadı.");
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
+  // Bazı hesaplarda 1.5 modelleri yalnızca v1 API üzerinden erişilebilir.
+  const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1" });
 
   const model = genAI.getGenerativeModel({
     model: MODEL_NAME,
