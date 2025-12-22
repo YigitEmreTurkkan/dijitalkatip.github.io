@@ -1,17 +1,15 @@
 import { jsPDF } from "jspdf";
 
-// Basit A4 düzeniyle dilekçeyi PDF'e çevirir.
-// Not: Gerçek projede Türkçe karakterler için gömülü bir Unicode font eklemek önerilir.
+// Türkçe karakterleri daha düzgün göstermek için Helvetica'yı kullanıyoruz
+// (jsPDF varsayılan Times fontu bazı aksanlarda sorun çıkarabiliyor).
 export function generatePetitionPdf(petitionData) {
   if (!petitionData) return;
 
-  const doc = new jsPDF({
-    unit: "mm",
-    format: "a4"
-  });
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
 
   const marginLeft = 20;
   const marginRight = 190;
+  const lineGap = 6;
   let cursorY = 20;
 
   const {
@@ -24,42 +22,42 @@ export function generatePetitionPdf(petitionData) {
   } = petitionData;
 
   // Başlık (Kurum) - ortalı
-  doc.setFont("Times", "Bold");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text(header || "", 105, cursorY, { align: "center" });
-
-  cursorY += 16;
-
-  // Tarih - sağ üst
-  if (footer_date) {
-    doc.setFont("Times", "Normal");
-    doc.setFontSize(11);
-    doc.text(footer_date, marginRight, cursorY - 10, { align: "right" });
+  if (header) {
+    doc.text(header, 105, cursorY, { align: "center" });
   }
 
-  // Konu (varsa)
+  // Tarih - sağ üst (başlığın biraz altına yerleştir)
+  if (footer_date) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(footer_date, marginRight, cursorY + 2, { align: "right" });
+  }
+
+  cursorY += 14;
+
+  // Konu
   if (subject) {
-    doc.setFont("Times", "Bold");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     const subjectText = `Konu: ${subject}`;
     const lines = doc.splitTextToSize(subjectText, marginRight - marginLeft);
     doc.text(lines, marginLeft, cursorY);
-    cursorY += lines.length * 6 + 4;
+    cursorY += lines.length * lineGap + 2;
   }
 
-  // Hitap ve gövde
-  doc.setFont("Times", "Normal");
+  // Gövde
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
-
   const bodyText = body || "";
   const bodyLines = doc.splitTextToSize(bodyText, marginRight - marginLeft);
   doc.text(bodyLines, marginLeft, cursorY);
+  cursorY += bodyLines.length * lineGap + 16;
 
-  cursorY += bodyLines.length * 6 + 20;
-
-  // İmza alanı - sağ altta
+  // İmza alanı
   const signatureY = Math.max(cursorY, 240);
-  doc.setFont("Times", "Normal");
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
   if (footer_name) {
     doc.text(footer_name, marginRight, signatureY, { align: "right" });
@@ -68,12 +66,11 @@ export function generatePetitionPdf(petitionData) {
     const addressLines = doc.splitTextToSize(footer_address, 70);
     doc.text(addressLines, marginRight, signatureY + 6, { align: "right" });
   }
-
-  // "İmza" metni
   doc.setFontSize(11);
   doc.text("İmza", marginRight, signatureY - 6, { align: "right" });
 
   doc.save("dilekce.pdf");
 }
+
 
 
