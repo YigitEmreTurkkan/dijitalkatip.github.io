@@ -1,16 +1,53 @@
 import { jsPDF } from "jspdf";
 
-// Türkçe karakterleri daha düzgün göstermek için Helvetica'yı kullanıyoruz
-// (jsPDF varsayılan Times fontu bazı aksanlarda sorun çıkarabiliyor).
-export function generatePetitionPdf(petitionData) {
+// Roboto latin geniş karakter setini uzaktan yükleyip jsPDF'e gömüyoruz.
+// Böylece Türkçe karakterler bozulmadan yazılır.
+const ROBOTO_REGULAR_URL =
+  "https://unpkg.com/@fontsource/roboto/files/roboto-latin-400-normal.ttf";
+const ROBOTO_BOLD_URL =
+  "https://unpkg.com/@fontsource/roboto/files/roboto-latin-700-normal.ttf";
+
+let fontLoaded = false;
+
+function arrayBufferToBase64(buffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+async function ensureRoboto(doc) {
+  if (fontLoaded) return;
+
+  const [regularRes, boldRes] = await Promise.all([
+    fetch(ROBOTO_REGULAR_URL),
+    fetch(ROBOTO_BOLD_URL)
+  ]);
+
+  const regularBase64 = arrayBufferToBase64(await regularRes.arrayBuffer());
+  const boldBase64 = arrayBufferToBase64(await boldRes.arrayBuffer());
+
+  doc.addFileToVFS("Roboto-Regular.ttf", regularBase64);
+  doc.addFileToVFS("Roboto-Bold.ttf", boldBase64);
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+  doc.addFont("Roboto-Bold.ttf", "Roboto", "bold");
+
+  fontLoaded = true;
+}
+
+// PDF'i Roboto fontu ile, düzenli satır aralığı ve kenar boşluklarıyla üretir.
+export async function generatePetitionPdf(petitionData) {
   if (!petitionData) return;
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  await ensureRoboto(doc);
 
   const marginLeft = 20;
   const marginRight = 190;
   const lineGap = 6;
-  let cursorY = 20;
+  let cursorY = 22;
 
   const {
     header = "",
@@ -22,42 +59,42 @@ export function generatePetitionPdf(petitionData) {
   } = petitionData;
 
   // Başlık (Kurum) - ortalı
-  doc.setFont("helvetica", "bold");
+  doc.setFont("Roboto", "bold");
   doc.setFontSize(14);
   if (header) {
     doc.text(header, 105, cursorY, { align: "center" });
   }
 
-  // Tarih - sağ üst (başlığın biraz altına yerleştir)
+  // Tarih - sağ üst (başlığın hizasında)
   if (footer_date) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Roboto", "normal");
     doc.setFontSize(11);
-    doc.text(footer_date, marginRight, cursorY + 2, { align: "right" });
+    doc.text(footer_date, marginRight, cursorY - 2, { align: "right" });
   }
 
   cursorY += 14;
 
   // Konu
   if (subject) {
-    doc.setFont("helvetica", "bold");
+    doc.setFont("Roboto", "bold");
     doc.setFontSize(12);
     const subjectText = `Konu: ${subject}`;
     const lines = doc.splitTextToSize(subjectText, marginRight - marginLeft);
     doc.text(lines, marginLeft, cursorY);
-    cursorY += lines.length * lineGap + 2;
+    cursorY += lines.length * lineGap + 3;
   }
 
   // Gövde
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Roboto", "normal");
   doc.setFontSize(12);
   const bodyText = body || "";
   const bodyLines = doc.splitTextToSize(bodyText, marginRight - marginLeft);
   doc.text(bodyLines, marginLeft, cursorY);
-  cursorY += bodyLines.length * lineGap + 16;
+  cursorY += bodyLines.length * lineGap + 18;
 
   // İmza alanı
   const signatureY = Math.max(cursorY, 240);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Roboto", "normal");
   doc.setFontSize(12);
   if (footer_name) {
     doc.text(footer_name, marginRight, signatureY, { align: "right" });

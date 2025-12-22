@@ -82,9 +82,17 @@ export function Chat({ apiKey }) {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!lastPetition) return;
-    generatePetitionPdf(lastPetition);
+    try {
+      setLoading(true);
+      await generatePetitionPdf(lastPetition);
+    } catch (err) {
+      console.error(err);
+      setError("PDF oluşturulurken hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const showDownloadButton =
@@ -230,5 +238,6 @@ export function Chat({ apiKey }) {
     </div>
   );
 }
+
 
 
