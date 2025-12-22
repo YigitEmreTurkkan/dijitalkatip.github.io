@@ -18,6 +18,30 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
+function normalizeText(text) {
+  if (!text) return "";
+  const normalized = text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n\n");
+
+  // Türkçe karakterleri Latin eşleniğine çevirerek PDF'te bozulmaların önüne geçiyoruz.
+  return normalized
+    .replace(/ş/g, "s")
+    .replace(/Ş/g, "S")
+    .replace(/ğ/g, "g")
+    .replace(/Ğ/g, "G")
+    .replace(/ı/g, "i")
+    .replace(/İ/g, "I")
+    .replace(/ç/g, "c")
+    .replace(/Ç/g, "C")
+    .replace(/ö/g, "o")
+    .replace(/Ö/g, "O")
+    .replace(/ü/g, "u")
+    .replace(/Ü/g, "U");
+}
+
 async function ensureRoboto(doc) {
   if (fontLoaded) return true;
 
@@ -54,9 +78,10 @@ export async function generatePetitionPdf(petitionData) {
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const hasRoboto = await ensureRoboto(doc);
+  doc.setLineHeightFactor(1.35);
 
-  const marginLeft = 20;
-  const marginRight = 190;
+  const marginLeft = 22;
+  const marginRight = 188;
   const lineGap = 6;
   let cursorY = 22;
 
@@ -69,11 +94,16 @@ export async function generatePetitionPdf(petitionData) {
     footer_address = ""
   } = petitionData;
 
+  const cleanHeader = normalizeText(header);
+  const cleanSubject = normalizeText(subject);
+  const cleanBody = normalizeText(body);
+  const cleanFooterAddress = normalizeText(footer_address);
+
   // Başlık (Kurum) - ortalı
   doc.setFont(hasRoboto ? "Roboto" : "helvetica", "bold");
   doc.setFontSize(14);
-  if (header) {
-    doc.text(header, 105, cursorY, { align: "center" });
+  if (cleanHeader) {
+    doc.text(cleanHeader, 105, cursorY, { align: "center" });
   }
 
   // Tarih - sağ üst (başlığın hizasında)
@@ -86,10 +116,10 @@ export async function generatePetitionPdf(petitionData) {
   cursorY += 14;
 
   // Konu
-  if (subject) {
+  if (cleanSubject) {
     doc.setFont(hasRoboto ? "Roboto" : "helvetica", "bold");
     doc.setFontSize(12);
-    const subjectText = `Konu: ${subject}`;
+    const subjectText = `Konu: ${cleanSubject}`;
     const lines = doc.splitTextToSize(subjectText, marginRight - marginLeft);
     doc.text(lines, marginLeft, cursorY);
     cursorY += lines.length * lineGap + 3;
@@ -98,7 +128,7 @@ export async function generatePetitionPdf(petitionData) {
   // Gövde
   doc.setFont(hasRoboto ? "Roboto" : "helvetica", "normal");
   doc.setFontSize(12);
-  const bodyText = body || "";
+  const bodyText = cleanBody || "";
   const bodyLines = doc.splitTextToSize(bodyText, marginRight - marginLeft);
   doc.text(bodyLines, marginLeft, cursorY);
   cursorY += bodyLines.length * lineGap + 18;
@@ -110,8 +140,8 @@ export async function generatePetitionPdf(petitionData) {
   if (footer_name) {
     doc.text(footer_name, marginRight, signatureY, { align: "right" });
   }
-  if (footer_address) {
-    const addressLines = doc.splitTextToSize(footer_address, 70);
+  if (cleanFooterAddress) {
+    const addressLines = doc.splitTextToSize(cleanFooterAddress, 70);
     doc.text(addressLines, marginRight, signatureY + 6, { align: "right" });
   }
   doc.setFontSize(11);
