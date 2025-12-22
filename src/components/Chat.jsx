@@ -188,7 +188,7 @@ export function Chat({ apiKey }) {
         {loading && (
           <div className="flex items-center gap-2 text-xs text-slate-500 px-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin text-dk-blue-500" />
-            <span>DijitalKatip yazıyor...</span>
+            <span>DijitalKatip işlem yapıyor...</span>
           </div>
         )}
 
