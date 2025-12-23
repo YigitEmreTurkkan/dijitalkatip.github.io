@@ -89,15 +89,28 @@ export async function generatePetitionPdf(petitionData) {
     header = "",
     subject = "",
     body = "",
+    legal_grounds = "",
+    evidence = "",
     footer_date = "",
+    footer_signature = "",
     footer_name = "",
     footer_address = ""
   } = petitionData;
 
-  const cleanHeader = normalizeText(header);
+  const cleanHeader = normalizeText(header).toUpperCase();
   const cleanSubject = normalizeText(subject);
   const cleanBody = normalizeText(body);
+  const cleanLegal = normalizeText(legal_grounds);
+  const cleanEvidence = normalizeText(evidence);
   const cleanFooterAddress = normalizeText(footer_address);
+
+  // Date rule: if no footer_date, use today's fixed date per requirement.
+  const finalDate = footer_date && footer_date.trim() ? footer_date : "23.12.2025";
+  const signatureLine = footer_signature
+    ? normalizeText(footer_signature)
+    : footer_name
+      ? normalizeText(footer_name)
+      : "";
 
   // Başlık (Kurum) - ortalı
   doc.setFont(hasRoboto ? "Roboto" : "helvetica", "bold");
@@ -107,11 +120,9 @@ export async function generatePetitionPdf(petitionData) {
   }
 
   // Tarih - sağ üst (başlığın hizasında)
-  if (footer_date) {
-    doc.setFont(hasRoboto ? "Roboto" : "helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(footer_date, marginRight, cursorY - 2, { align: "right" });
-  }
+  doc.setFont(hasRoboto ? "Roboto" : "helvetica", "normal");
+  doc.setFontSize(11);
+  doc.text(finalDate, marginRight, cursorY - 2, { align: "right" });
 
   cursorY += 14;
 
@@ -131,14 +142,36 @@ export async function generatePetitionPdf(petitionData) {
   const bodyText = cleanBody || "";
   const bodyLines = doc.splitTextToSize(bodyText, marginRight - marginLeft);
   doc.text(bodyLines, marginLeft, cursorY);
-  cursorY += bodyLines.length * lineGap + 18;
+  cursorY += bodyLines.length * lineGap + 10;
+
+  // Hukuki Dayanaklar
+  if (cleanLegal) {
+    doc.setFont(hasRoboto ? "Roboto" : "helvetica", "bold");
+    doc.text("Hukuki Dayanaklar:", marginLeft, cursorY);
+    cursorY += lineGap;
+    doc.setFont(hasRoboto ? "Roboto" : "helvetica", "normal");
+    const legalLines = doc.splitTextToSize(cleanLegal, marginRight - marginLeft);
+    doc.text(legalLines, marginLeft, cursorY);
+    cursorY += legalLines.length * lineGap + 8;
+  }
+
+  // Deliller
+  if (cleanEvidence) {
+    doc.setFont(hasRoboto ? "Roboto" : "helvetica", "bold");
+    doc.text("Deliller:", marginLeft, cursorY);
+    cursorY += lineGap;
+    doc.setFont(hasRoboto ? "Roboto" : "helvetica", "normal");
+    const evidenceLines = doc.splitTextToSize(cleanEvidence, marginRight - marginLeft);
+    doc.text(evidenceLines, marginLeft, cursorY);
+    cursorY += evidenceLines.length * lineGap + 10;
+  }
 
   // İmza alanı
   const signatureY = Math.max(cursorY, 240);
   doc.setFont(hasRoboto ? "Roboto" : "helvetica", "normal");
   doc.setFontSize(12);
-  if (footer_name) {
-    doc.text(footer_name, marginRight, signatureY, { align: "right" });
+  if (signatureLine) {
+    doc.text(signatureLine, marginRight, signatureY, { align: "right" });
   }
   if (cleanFooterAddress) {
     const addressLines = doc.splitTextToSize(cleanFooterAddress, 70);
