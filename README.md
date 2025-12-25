@@ -60,4 +60,4 @@ User -> Web UI/API -> Validation/Orchestration -> LLM (inference)
 
 Bu proje MIT lisansı altında lisanslanmıştır. Ayrıntılar için `LICENSE` dosyasına bakınız.
 
-Sorular/iş birlikleri için: yiğit.emre.turkan@example.com
+Sorular/iş birlikleri için: yigit.turkkan@gmail.com
