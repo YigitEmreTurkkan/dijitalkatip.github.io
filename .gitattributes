@@ -1,83 +1,32 @@
-# ------------------------
-# Normalize line endings for text files (force LF across platforms)
-# ------------------------
-* text=auto
-*.py text eol=lf
-*.md text eol=lf
-*.rst text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.json text eol=lf
-*.toml text eol=lf
-*.csv text eol=lf
-*.sh text eol=lf
-*.ps1 text eol=crlf
+# Python dosyaları için dil tanımlaması
+*.py linguist-language=Python
+*.py linguist-detectable=true
 
-# ------------------------
-# Explicit binary types (no CRLF conversion, no diffs)
-# ------------------------
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.pdf binary
-*.zip binary
-*.tar.gz binary
-*.tgz binary
-*.rar binary
-*.7z binary
-*.mp4 binary
-*.mov binary
-*.wav binary
+# JavaScript dosyaları
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript
 
-# ------------------------
-# Model files & large artifacts — recommend tracking via Git LFS
-# ------------------------
-# These attributes help ensure consistent handling and recommend LFS usage.
-*.pt filter=lfs diff=lfs merge=lfs -text
-*.pth filter=lfs diff=lfs merge=lfs -text
-*.ckpt filter=lfs diff=lfs merge=lfs -text
-*.safetensors filter=lfs diff=lfs merge=lfs -text
-*.bin filter=lfs diff=lfs merge=lfs -text
-weights/** filter=lfs diff=lfs merge=lfs -text
-model_weights/** filter=lfs diff=lfs merge=lfs -text
-checkpoints/** filter=lfs diff=lfs merge=lfs -text
+# TypeScript dosyaları (varsa)
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
 
-# Large datasets
-data/** filter=lfs diff=lfs merge=lfs -text
-*.parquet filter=lfs diff=lfs merge=lfs -text
+# CSS dosyaları
+*.css linguist-language=CSS
 
-# Legal document bundles and generated PDFs should be treated as large artifacts
-legal_docs/** filter=lfs diff=lfs merge=lfs -text
-docs/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+# Markdown dosyaları
+*.md linguist-language=Markdown
 
-# ------------------------
-# Disable diffs for binary files to avoid noise
-# ------------------------
-*.pdf -diff
-*.png -diff
-*.jpg -diff
-*.zip -diff
-*.bin -diff
+# HTML dosyaları
+*.html linguist-language=HTML
 
-# ------------------------
-# Export / archive hygiene
-# ------------------------
-*.log export-ignore
-.env export-ignore
-.env.* export-ignore
-*.pyc export-ignore
+# JSON dosyaları
+*.json linguist-language=JSON
 
-# ------------------------
-# Repository metadata and language tagging
-# ------------------------
-# Mark vendored/third-party folders so GitHub linguist treats them appropriately
-vendor/** linguist-vendored=true
+# YAML dosyaları
+*.yml linguist-language=YAML
+*.yaml linguist-language=YAML
 
-# Exclude generated docs and large bundles from archives
-docs/** export-ignore
-legal_docs/** export-ignore
-
-# Guidance: recommend running `git lfs install` and tracking large artifacts
-# e.g. `git lfs track "weights/*.pt"`
+# Diğer dosyalar
+*.lock linguist-generated=true
+dist/* linguist-generated=true
+node_modules/* linguist-vendored=true
