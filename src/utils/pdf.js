@@ -1,10 +1,9 @@
 import { jsPDF } from "jspdf";
 
-// Times New Roman benzeri serif font için Noto Serif kullanıyoruz (Türkçe karakter desteği ile)
-const NOTO_SERIF_REGULAR_URL =
-  "https://fonts.gstatic.com/s/notoserif/v23/ga6iaw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZqFGjwM0Lh.woff2";
-const NOTO_SERIF_BOLD_URL =
-  "https://fonts.gstatic.com/s/notoserif/v23/ga6Law1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZqFGjwM0Lh.woff2";
+// DejaVu Sans fontunu kullanıyoruz - Türkçe karakterleri tam destekler
+// Font dosyaları: https://github.com/DejaVuFonts/dejavu-fonts
+const DEJAVU_SANS_REGULAR_URL = "https://cdn.jsdelivr.net/npm/dejavu-sans@2.37/fonts/ttf/DejaVuSans.ttf";
+const DEJAVU_SANS_BOLD_URL = "https://cdn.jsdelivr.net/npm/dejavu-sans@2.37/fonts/ttf/DejaVuSans-Bold.ttf";
 
 let fontLoaded = false;
 
@@ -17,7 +16,7 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-// Türkçe karakterleri koruyarak metni temizle (UTF-8 desteği ile)
+// Türkçe karakterleri KORUYARAK metni temizle (artık karakterleri değiştirmiyoruz)
 function normalizeText(text) {
   if (!text) return "";
   return text
@@ -27,16 +26,36 @@ function normalizeText(text) {
     .join("\n\n");
 }
 
-async function ensureNotoSerif(doc) {
+async function ensureDejaVuFont(doc) {
   if (fontLoaded) return true;
 
   try {
-    // Noto Serif yerine jsPDF'in dahili Times fontunu kullanıyoruz (Türkçe karakter desteği için)
-    // jsPDF'in Times fontu Türkçe karakterleri destekler
+    // DejaVu Sans fontunu indirip jsPDF'e gömmek
+    const [regularRes, boldRes] = await Promise.all([
+      fetch(DEJAVU_SANS_REGULAR_URL),
+      fetch(DEJAVU_SANS_BOLD_URL)
+    ]);
+
+    if (!regularRes.ok || !boldRes.ok) {
+      console.warn("DejaVu fontları indirilemedi, varsayılan font kullanılacak.");
+      return false;
+    }
+
+    const regularBase64 = arrayBufferToBase64(await regularRes.arrayBuffer());
+    const boldBase64 = arrayBufferToBase64(await boldRes.arrayBuffer());
+
+    // jsPDF'e font dosyalarını ekle
+    doc.addFileToVFS("DejaVuSans.ttf", regularBase64);
+    doc.addFileToVFS("DejaVuSans-Bold.ttf", boldBase64);
+    
+    // Font'u kaydet
+    doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
+    doc.addFont("DejaVuSans-Bold.ttf", "DejaVu", "bold");
+
     fontLoaded = true;
     return true;
   } catch (e) {
-    console.warn("Font yükleme hatası, varsayılan font kullanılacak.", e);
+    console.warn("DejaVu font yükleme hatası, varsayılan font kullanılacak.", e);
     return false;
   }
 }
@@ -46,7 +65,7 @@ export async function generatePetitionPdf(petitionData) {
   if (!petitionData) return;
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  await ensureNotoSerif(doc);
+  const hasDejaVu = await ensureDejaVuFont(doc);
   
   // Resmi yazışma standartları: 2.5cm kenar boşlukları, 1.5 satır aralığı
   const marginLeft = 25; // 2.5cm
@@ -90,7 +109,7 @@ export async function generatePetitionPdf(petitionData) {
       : "Hakan"; // Örnek isim
 
   // 1. BAŞLIK: Mahkeme adı ortalanmış, BOLD, BÜYÜK HARFLERLE
-  doc.setFont("times", "bold");
+  doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
   doc.setFontSize(14);
   if (cleanHeader) {
     doc.text(cleanHeader, 105, cursorY, { align: "center" });
@@ -99,14 +118,14 @@ export async function generatePetitionPdf(petitionData) {
 
   // 2. DOSYA NO: Sağ üst köşede (başlığın altında)
   if (cleanFileNumber) {
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     doc.setFontSize(10);
     doc.text(`Dosya No: ${cleanFileNumber}`, marginRight, cursorY, { align: "right" });
   }
   cursorY += 6;
 
   // 3. TARİH: Sağ üstte
-  doc.setFont("times", "normal");
+  doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
   doc.setFontSize(11);
   doc.text(finalDate, marginRight, cursorY, { align: "right" });
   cursorY += 10;
@@ -116,30 +135,30 @@ export async function generatePetitionPdf(petitionData) {
   const valueStartX = marginLeft + labelWidth; // Değerlerin başlangıç pozisyonu
 
   if (cleanPlaintiff) {
-    doc.setFont("times", "bold");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
     doc.setFontSize(12);
     doc.text("DAVACI:", marginLeft, cursorY);
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     const plaintiffLines = doc.splitTextToSize(cleanPlaintiff, marginRight - valueStartX);
     doc.text(plaintiffLines, valueStartX, cursorY);
     cursorY += plaintiffLines.length * lineHeight + 2;
   }
 
   if (cleanAttorney) {
-    doc.setFont("times", "bold");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
     doc.setFontSize(12);
     doc.text("VEKİLİ:", marginLeft, cursorY);
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     const attorneyLines = doc.splitTextToSize(cleanAttorney, marginRight - valueStartX);
     doc.text(attorneyLines, valueStartX, cursorY);
     cursorY += attorneyLines.length * lineHeight + 2;
   }
 
   if (cleanDefendant) {
-    doc.setFont("times", "bold");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
     doc.setFontSize(12);
     doc.text("DAVALI:", marginLeft, cursorY);
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     const defendantLines = doc.splitTextToSize(cleanDefendant, marginRight - valueStartX);
     doc.text(defendantLines, valueStartX, cursorY);
     cursorY += defendantLines.length * lineHeight + 4;
@@ -147,17 +166,17 @@ export async function generatePetitionPdf(petitionData) {
 
   // 5. KONU: Sol blokta, bold
   if (cleanSubject) {
-    doc.setFont("times", "bold");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
     doc.setFontSize(12);
     doc.text("KONU:", marginLeft, cursorY);
     const subjectLines = doc.splitTextToSize(cleanSubject, marginRight - marginLeft - 30);
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     doc.text(subjectLines, marginLeft + 30, cursorY);
     cursorY += subjectLines.length * lineHeight + 4;
   }
 
   // 6. GÖVDE: Resmi dilekçe metni, paragraflar arası boşluk
-  doc.setFont("times", "normal");
+  doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
   doc.setFontSize(12);
   const bodyParagraphs = cleanBody.split(/\n\n+/).filter(Boolean);
   bodyParagraphs.forEach((para, idx) => {
@@ -170,11 +189,11 @@ export async function generatePetitionPdf(petitionData) {
 
   // 7. HUKUKİ DAYANAKLAR (varsa)
   if (cleanLegal) {
-    doc.setFont("times", "bold");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
     doc.setFontSize(12);
     doc.text("Hukuki Dayanaklar:", marginLeft, cursorY);
     cursorY += lineHeight;
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     const legalLines = doc.splitTextToSize(cleanLegal, marginRight - marginLeft);
     doc.text(legalLines, marginLeft, cursorY);
     cursorY += legalLines.length * lineHeight + 6;
@@ -182,11 +201,11 @@ export async function generatePetitionPdf(petitionData) {
 
   // 8. DELİLLER (varsa)
   if (cleanEvidence) {
-    doc.setFont("times", "bold");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "bold");
     doc.setFontSize(12);
     doc.text("Deliller:", marginLeft, cursorY);
     cursorY += lineHeight;
-    doc.setFont("times", "normal");
+    doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
     const evidenceLines = doc.splitTextToSize(cleanEvidence, marginRight - marginLeft);
     doc.text(evidenceLines, marginLeft, cursorY);
     cursorY += evidenceLines.length * lineHeight + 8;
@@ -194,7 +213,7 @@ export async function generatePetitionPdf(petitionData) {
 
   // 9. İMZA ALANI: Sağ alt köşede
   const signatureY = Math.max(cursorY, 250);
-  doc.setFont("times", "normal");
+  doc.setFont(hasDejaVu ? "DejaVu" : "times", "normal");
   doc.setFontSize(11);
   doc.text("İmza", marginRight, signatureY - 8, { align: "right" });
   doc.setFontSize(12);
