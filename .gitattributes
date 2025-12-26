@@ -1,32 +1,19 @@
-# Python dosyaları için dil tanımlaması
 *.py linguist-language=Python
 *.py linguist-detectable=true
 
-# JavaScript dosyaları
-*.js linguist-language=JavaScript
-*.jsx linguist-language=JavaScript
+*.js linguist-detectable=false
+*.jsx linguist-detectable=false
+*.ts linguist-detectable=false
+*.tsx linguist-detectable=false
+*.css linguist-detectable=false
+*.md linguist-detectable=false
+*.html linguist-detectable=false
+*.json linguist-detectable=false
+*.yml linguist-detectable=false
+*.yaml linguist-detectable=false
+*.cjs linguist-detectable=false
+*.mjs linguist-detectable=false
 
-# TypeScript dosyaları (varsa)
-*.ts linguist-language=TypeScript
-*.tsx linguist-language=TypeScript
-
-# CSS dosyaları
-*.css linguist-language=CSS
-
-# Markdown dosyaları
-*.md linguist-language=Markdown
-
-# HTML dosyaları
-*.html linguist-language=HTML
-
-# JSON dosyaları
-*.json linguist-language=JSON
-
-# YAML dosyaları
-*.yml linguist-language=YAML
-*.yaml linguist-language=YAML
-
-# Diğer dosyalar
-*.lock linguist-generated=true
 dist/* linguist-generated=true
 node_modules/* linguist-vendored=true
+*.lock linguist-generated=true
