@@ -3,7 +3,6 @@ import ReactMarkdown from "react-markdown";
 import { cn } from "../utils/cn";
 import { createGeminiClient } from "../services/api";
 import { generatePetitionPdf } from "../utils/pdf";
-import { generatePetitionPdfPython } from "../utils/pdf-python";
 import {
   Send,
   FileText,
@@ -88,15 +87,10 @@ export function Chat({ apiKey }) {
     try {
       setLoading(true);
       setError("");
-      
-      // Önce Python motorunu dene (daha iyi Türkçe karakter desteği)
-      try {
-        await generatePetitionPdfPython(lastPetition);
-      } catch (pythonError) {
-        console.warn("Python PDF motoru başarısız, JavaScript motoruna geçiliyor:", pythonError);
-        // Fallback: JavaScript motorunu kullan
-        await generatePetitionPdf(lastPetition);
-      }
+
+      // Şu anda yalnızca JS tabanlı PDF motoru (jsPDF + DejaVu) kullanılıyor.
+      // Python/Pyodide tabanlı motor Türkçe karakterlerde bozulma yarattığı için devre dışı.
+      await generatePetitionPdf(lastPetition);
     } catch (err) {
       console.error(err);
       setError("PDF oluşturulurken hata oluştu. Lütfen tekrar deneyin.");
