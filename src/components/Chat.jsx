@@ -224,11 +224,19 @@ export function Chat({ apiKey }) {
                 placeholder="Talebinizi veya açıklamanızı yazın. Örneğin: Kiracı olarak kira sözleşmemi feshetmek istiyorum..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (input.trim() && !loading && client) {
+                      handleSend(e);
+                    }
+                  }
+                }}
               />
             </div>
             <p className="mt-1 text-[11px] text-slate-400">
               İpucu: &quot;Dilekçe yaz&quot; diyerek başlayabilir, devamında
-              kurum ve konuyu açıklayabilirsiniz.
+              kurum ve konuyu açıklayabilirsiniz. Enter ile gönder, Shift+Enter ile yeni satır.
             </p>
           </div>
 
