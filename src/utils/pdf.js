@@ -68,8 +68,13 @@ export async function generatePetitionPdf(petitionData) {
   const hasDejaVu = await ensureDejaVuFont(doc);
   
   // Resmi yazışma standartları: 2.5cm kenar boşlukları, 1.5 satır aralığı
-  const marginLeft = 25; // 2.5cm
-  const marginRight = 185; // A4 genişliği (210mm) - 25mm
+  //const marginLeft = 25; // 2.5cm
+  //const marginRight = 185; // A4 genişliği (210mm) - 25mm
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  const marginLeft = 15;              // 1.5 cm
+  const marginRight = pageWidth - 15; // 195
+
   const lineHeight = 4.5; // 1.5 satır aralığı (12pt font için ~4.5mm)
   let cursorY = 25;
 
@@ -89,7 +94,7 @@ export async function generatePetitionPdf(petitionData) {
     file_number = ""
   } = petitionData;
 
-  const cleanHeader = normalizeText(header).toUpperCase();
+  const cleanHeader = normalizeText(header).toLocaleUpperCase("tr-TR");
   const cleanPlaintiff = normalizeText(plaintiff).replace(/^DAVACI:\s*/i, "");
   const cleanAttorney = normalizeText(attorney).replace(/^VEKİLİ:\s*/i, "");
   const cleanDefendant = normalizeText(defendant).replace(/^DAVALI:\s*/i, "");
