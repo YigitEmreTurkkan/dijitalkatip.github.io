@@ -6,8 +6,13 @@ fpdf2 kütüphanesi kullanarak Türkçe karakter desteği ile resmi dilekçe PDF
 
 from fpdf import FPDF
 import base64
+import html
 
-
+def decode_html(text):
+    if not text:
+        return ""
+    return html.unescape(text)
+    
 class TurkishPetitionPDF(FPDF):
     """Türkçe karakter desteği olan resmi dilekçe PDF sınıfı"""
     
@@ -45,7 +50,6 @@ class TurkishPetitionPDF(FPDF):
                 self.multi_cell(160, 6, para.strip(), 0, 'J', False)
                 self.ln(2)
 
-
 def create_petition_pdf(petition_data):
     """
     Dilekçe verisinden PDF oluşturur
@@ -59,19 +63,27 @@ def create_petition_pdf(petition_data):
     pdf = TurkishPetitionPDF()
     
     # Verileri al (varsayılan değerlerle)
-    header = petition_data.get('header', '')
-    file_number = petition_data.get('file_number', '')
-    footer_date = petition_data.get('footer_date', '23.12.2025')
-    plaintiff = petition_data.get('plaintiff', '').replace('DAVACI:', '').strip()
-    attorney = petition_data.get('attorney', '').replace('VEKİLİ:', '').strip()
-    defendant = petition_data.get('defendant', '').replace('DAVALI:', '').strip()
-    subject = petition_data.get('subject', '').replace('KONU:', '').strip()
-    body = petition_data.get('body', '')
-    legal_grounds = petition_data.get('legal_grounds', '')
-    evidence = petition_data.get('evidence', '')
-    footer_signature = petition_data.get('footer_signature', '')
-    footer_name = petition_data.get('footer_name', '')
-    footer_address = petition_data.get('footer_address', '')
+    header = decode_html(petition_data.get('header', ''))
+    file_number = decode_html(petition_data.get('file_number', ''))
+    footer_date = decode_html(petition_data.get('footer_date', '23.12.2025'))
+    plaintiff = decode_html(
+        petition_data.get('plaintiff', '')
+    ).replace('DAVACI:', '').strip()
+    attorney = decode_html(
+        petition_data.get('attorney', '')
+    ).replace('VEKİLİ:', '').strip()
+    defendant = decode_html(
+        petition_data.get('defendant', '')
+    ).replace('DAVALI:', '').strip()
+    subject = decode_html(
+        petition_data.get('subject', '')
+    ).replace('KONU:', '').strip()
+    body = decode_html(petition_data.get('body', ''))
+    legal_grounds = decode_html(petition_data.get('legal_grounds', ''))
+    evidence = decode_html(petition_data.get('evidence', ''))
+    footer_signature = decode_html(petition_data.get('footer_signature', ''))
+    footer_name = decode_html(petition_data.get('footer_name', ''))
+    footer_address = decode_html(petition_data.get('footer_address', ''))
     
     # İmza satırı: footer_signature varsa onu kullan, yoksa footer_name
     signature_line = footer_signature if footer_signature else footer_name
