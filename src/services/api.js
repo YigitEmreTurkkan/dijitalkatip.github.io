@@ -43,40 +43,9 @@ export function createGeminiClient(apiKey) {
       const result = await model.generateContent({
         contents,
         generationConfig: {
-          responseMimeType: "application/json", // JSON modu
-          responseSchema: {
-            type: "object",
-            properties: {
-              status: {
-                type: "string",
-                enum: ["chatting", "completed"],
-                description: "Current conversation status"
-              },
-              message_to_user: {
-                type: "string",
-                description: "Message to display to the user"
-              },
-              petition_data: {
-                type: ["object", "null"],
-                description: "Petition data when status is completed, null otherwise",
-                properties: {
-                  header: { type: "string" },
-                  plaintiff: { type: "string" },
-                  attorney: { type: "string" },
-                  defendant: { type: "string" },
-                  subject: { type: "string" },
-                  body: { type: "string" },
-                  legal_grounds: { type: "string" },
-                  evidence: { type: "string" },
-                  footer_date: { type: "string" },
-                  footer_name: { type: "string" },
-                  footer_address: { type: "string" },
-                  file_number: { type: "string" }
-                }
-              }
-            },
-            required: ["status", "message_to_user", "petition_data"]
-          }
+          responseMimeType: "application/json" // JSON modu
+          // responseSchema kaldırıldı - Gemini API'nin type: ["object", "null"] formatını desteklemediği için
+          // System prompt ile JSON formatı zorunlu kılındı
         }
       });
 
