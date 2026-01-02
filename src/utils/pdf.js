@@ -1,10 +1,9 @@
-// pdfmake import - package.json'daki "browser" field'ını kullan
-// Bu, Vite'in otomatik olarak doğru dosyayı seçmesini sağlar
-import pdfMake from "pdfmake/build/pdfmake.js";
-import pdfFonts from "pdfmake/build/vfs_fonts.js";
+// pdfmake import - Vite/Rollup uyumlu (uzantı olmadan)
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 
-// pdfmake font'larını yükle
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+// pdfmake font'larını yükle - farklı yapılandırmalar için uyumlu
+pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 // Türkçe karakterleri koruyarak metni normalize et
 function normalizeText(text) {

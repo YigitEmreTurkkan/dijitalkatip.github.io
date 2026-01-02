@@ -8,10 +8,14 @@ export default defineConfig({
   plugins: [react()],
   base: "/dijitalkatip.github.io/",
   resolve: {
-    conditions: ["browser", "module", "import", "default"]
+    alias: {
+      // pdfmake'in build dosyasını doğrudan işaret et
+      "pdfmake/build/pdfmake": "pdfmake/build/pdfmake",
+      "pdfmake/build/vfs_fonts": "pdfmake/build/vfs_fonts"
+    }
   },
   optimizeDeps: {
-    include: ["pdfmake/build/pdfmake.js", "pdfmake/build/vfs_fonts.js"]
+    include: ["pdfmake/build/pdfmake", "pdfmake/build/vfs_fonts"]
   },
   build: {
     commonjsOptions: {
