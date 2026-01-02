@@ -1,12 +1,34 @@
-// pdfmake import - Vite'in kendi çözme mekanizmasına güveniyoruz
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
+// pdfmake - Dinamik import ile runtime'da yükle (build hatasını önler)
+let pdfMake = null;
+let pdfFonts = null;
 
-// Fontları bağlama - güvenli kontrol
-if (pdfFonts && pdfFonts.pdfMake) {
-  pdfMake.vfs = pdfFonts.pdfMake.vfs;
-} else if (pdfFonts) {
-  pdfMake.vfs = pdfFonts.vfs;
+async function loadPdfMake() {
+  if (pdfMake && pdfFonts) {
+    return { pdfMake, pdfFonts };
+  }
+
+  try {
+    // Dinamik import - build aşamasında Rollup bunu çözmeye çalışmaz
+    const [pdfMakeModule, pdfFontsModule] = await Promise.all([
+      import("pdfmake/build/pdfmake.js"),
+      import("pdfmake/build/vfs_fonts.js")
+    ]);
+
+    pdfMake = pdfMakeModule.default || pdfMakeModule;
+    pdfFonts = pdfFontsModule.default || pdfFontsModule;
+
+    // Fontları bağlama - güvenli kontrol
+    if (pdfFonts && pdfFonts.pdfMake) {
+      pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    } else if (pdfFonts && pdfFonts.vfs) {
+      pdfMake.vfs = pdfFonts.vfs;
+    }
+
+    return { pdfMake, pdfFonts };
+  } catch (error) {
+    console.error("pdfmake yükleme hatası:", error);
+    throw new Error("PDF oluşturma kütüphanesi yüklenemedi. Lütfen sayfayı yenileyin.");
+  }
 }
 
 // Türkçe karakterleri koruyarak metni normalize et
@@ -22,6 +44,9 @@ function normalizeText(text) {
 // Resmi mahkeme dilekçesi formatında PDF üretir - pdfmake ile kusursuz Türkçe karakter desteği
 export async function generatePetitionPdf(petitionData) {
   if (!petitionData) return;
+
+  // pdfmake'i dinamik olarak yükle
+  const { pdfMake: pdfMakeInstance } = await loadPdfMake();
 
   const {
     header = "",
@@ -244,7 +269,7 @@ export async function generatePetitionPdf(petitionData) {
 
   // PDF'i oluştur ve indir - Türkçe karakterler kusursuz
   try {
-    const pdfDoc = pdfMake.createPdf(docDefinition);
+    const pdfDoc = pdfMakeInstance.createPdf(docDefinition);
     pdfDoc.download("dilekce.pdf");
     console.log("PDF başarıyla oluşturuldu - tüm bilgiler eklendi, Türkçe karakterler korundu.");
   } catch (error) {

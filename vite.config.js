@@ -7,15 +7,20 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   base: "/dijitalkatip.github.io/",
-  // Alias kısmını tamamen kaldırıyoruz - Vite'in kendi çözme mekanizmasına güveniyoruz
   resolve: {
-    alias: {}
+    // Browser field'ını kullan ve extensions ekle
+    conditions: ["browser", "module", "import", "default"],
+    extensions: [".js", ".jsx", ".ts", ".tsx", ".json"]
   },
   optimizeDeps: {
-    // pdfmake'i önceden optimize etmesini zorla
-    include: ["pdfmake/build/pdfmake", "pdfmake/build/vfs_fonts"]
+    // Dinamik import kullanıldığı için optimizeDeps'e eklemeye gerek yok
+    // Vite runtime'da otomatik olarak optimize edecek
   },
   build: {
+    rollupOptions: {
+      // pdfmake'i external olarak işaretleme - bundle'a dahil et
+      external: []
+    },
     commonjsOptions: {
       include: [/pdfmake/, /node_modules/],
       transformMixedEsModules: true
