@@ -43,32 +43,85 @@ export function createGeminiClient(apiKey) {
       const result = await model.generateContent({
         contents,
         generationConfig: {
-          responseMimeType: "application/json" // JSON modu
+          responseMimeType: "application/json", // JSON modu
+          responseSchema: {
+            type: "object",
+            properties: {
+              status: {
+                type: "string",
+                enum: ["chatting", "completed"],
+                description: "Current conversation status"
+              },
+              message_to_user: {
+                type: "string",
+                description: "Message to display to the user"
+              },
+              petition_data: {
+                type: ["object", "null"],
+                description: "Petition data when status is completed, null otherwise",
+                properties: {
+                  header: { type: "string" },
+                  plaintiff: { type: "string" },
+                  attorney: { type: "string" },
+                  defendant: { type: "string" },
+                  subject: { type: "string" },
+                  body: { type: "string" },
+                  legal_grounds: { type: "string" },
+                  evidence: { type: "string" },
+                  footer_date: { type: "string" },
+                  footer_name: { type: "string" },
+                  footer_address: { type: "string" },
+                  file_number: { type: "string" }
+                }
+              }
+            },
+            required: ["status", "message_to_user", "petition_data"]
+          }
         }
       });
 
       const rawText = result.response.text();
 
-      // JSON Parse İşlemi
-      // Bazen model JSON'ı ```json ... ``` blokları içine alabilir, temizlemek gerekebilir.
-      const cleanText = rawText.replace(/```json|```/g, "").trim();
+      // JSON Parse İşlemi - Birden fazla deneme
+      let cleanText = rawText.trim();
+      
+      // Markdown code block'larını temizle
+      cleanText = cleanText.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+      
+      // Eğer başında { yoksa, JSON'ı bulmaya çalış
+      if (!cleanText.startsWith("{")) {
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanText = jsonMatch[0];
+        }
+      }
 
       let parsed;
       try {
         parsed = JSON.parse(cleanText);
       } catch (err) {
+        console.error("JSON Parse Hatası:", err);
         console.error("Ham Cevap:", rawText);
-        throw new Error("AI geçerli bir JSON üretmedi.");
+        console.error("Temizlenmiş Metin:", cleanText);
+        
+        // Son çare: Eğer JSON değilse ama metin varsa, kullanıcıya göster
+        // Ancak bu durumda AI'ya tekrar sormak daha iyi olur
+        throw new Error("AI geçerli bir JSON üretmedi. Lütfen tekrar deneyin veya mesajınızı yeniden yazın.");
       }
 
       // Beklenen format kontrolü
       if (!parsed.status) {
-         // Eğer status yoksa AI muhtemelen saçmaladı, manuel düzeltme yapıyoruz
+         // Eğer status yoksa, varsayılan değerlerle doldur
          return {
              status: "chatting",
-             message_to_user: parsed.message_to_user || "Anlaşılamadı, tekrar eder misiniz?",
-             petition_data: null
+             message_to_user: parsed.message_to_user || rawText.substring(0, 200) + "...",
+             petition_data: parsed.petition_data || null
          };
+      }
+
+      // Status kontrolü - sadece "chatting" veya "completed" olabilir
+      if (parsed.status !== "chatting" && parsed.status !== "completed") {
+        parsed.status = "chatting";
       }
 
       return parsed;

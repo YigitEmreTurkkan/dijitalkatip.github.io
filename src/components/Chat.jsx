@@ -76,7 +76,18 @@ export function Chat({ apiKey }) {
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
+      // Daha kullanıcı dostu hata mesajları
+      let errorMessage = "Bir hata oluştu. Lütfen tekrar deneyin.";
+      
+      if (err.message?.includes("JSON")) {
+        errorMessage = "AI yanıtı işlenemedi. Lütfen mesajınızı yeniden yazın veya sayfayı yenileyin.";
+      } else if (err.message?.includes("API key")) {
+        errorMessage = "API anahtarı geçersiz. Lütfen ayarlardan API anahtarınızı kontrol edin.";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
