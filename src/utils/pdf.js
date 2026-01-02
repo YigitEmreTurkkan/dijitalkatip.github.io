@@ -1,5 +1,5 @@
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
+import pdfMake from "pdfmake/build/pdfmake.js";
+import pdfFonts from "pdfmake/build/vfs_fonts.js";
 
 // pdfmake font'larını yükle
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
