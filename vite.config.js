@@ -18,8 +18,18 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      // pdfmake'i external olarak işaretleme - bundle'a dahil et
-      external: []
+      // pdfmake'i external olarak işaretle - build aşamasında çözmeye çalışma
+      external: (id) => {
+        // pdfmake ile ilgili tüm import'ları external olarak işaretle
+        if (id.includes('pdfmake/build/pdfmake') || id.includes('pdfmake/build/vfs_fonts')) {
+          return true;
+        }
+        return false;
+      },
+      output: {
+        // External modüller için globals tanımla (runtime'da yüklenecek)
+        globals: {}
+      }
     },
     commonjsOptions: {
       include: [/pdfmake/, /node_modules/],

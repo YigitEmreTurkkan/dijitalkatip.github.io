@@ -1,4 +1,4 @@
-// pdfmake - Dinamik import ile runtime'da yükle (build hatasını önler)
+// pdfmake - External olarak işaretlendi, runtime'da yüklenecek
 let pdfMake = null;
 let pdfFonts = null;
 
@@ -8,10 +8,12 @@ async function loadPdfMake() {
   }
 
   try {
-    // Dinamik import - build aşamasında Rollup bunu çözmeye çalışmaz
+    // External olarak işaretlendiği için Vite bunları ayrı chunk'lara ayırdı
+    // Runtime'da bu chunk'lar otomatik yüklenecek
+    // @vite-ignore ile Vite'e bu import'ları çözmeye çalışmamasını söylüyoruz
     const [pdfMakeModule, pdfFontsModule] = await Promise.all([
-      import("pdfmake/build/pdfmake.js"),
-      import("pdfmake/build/vfs_fonts.js")
+      import(/* @vite-ignore */ 'pdfmake/build/pdfmake.js'),
+      import(/* @vite-ignore */ 'pdfmake/build/vfs_fonts.js')
     ]);
 
     pdfMake = pdfMakeModule.default || pdfMakeModule;
