@@ -1,9 +1,13 @@
-// pdfmake import - Vite/Rollup uyumlu (alias ile çözülecek)
+// pdfmake import - Vite'in kendi çözme mekanizmasına güveniyoruz
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 
-// Standart font ataması
-pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
+// Fontları bağlama - güvenli kontrol
+if (pdfFonts && pdfFonts.pdfMake) {
+  pdfMake.vfs = pdfFonts.pdfMake.vfs;
+} else if (pdfFonts) {
+  pdfMake.vfs = pdfFonts.vfs;
+}
 
 // Türkçe karakterleri koruyarak metni normalize et
 function normalizeText(text) {
