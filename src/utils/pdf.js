@@ -1,8 +1,8 @@
-// pdfmake import - Vite/Rollup uyumlu (uzantı olmadan)
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
+// pdfmake import - Vite/Rollup uyumlu (tam uzantılı, case-sensitive uyumlu)
+import pdfMake from "pdfmake/build/pdfmake.js";
+import * as pdfFonts from "pdfmake/build/vfs_fonts.js";
 
-// pdfmake font'larını yükle - farklı yapılandırmalar için uyumlu
+// Fontları bağlamayı unutma - farklı yapılandırmalar için uyumlu
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 // Türkçe karakterleri koruyarak metni normalize et
