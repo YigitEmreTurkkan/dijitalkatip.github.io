@@ -1,5 +1,6 @@
-import pdfMake from "pdfmake/build/pdfmake.js";
-import pdfFonts from "pdfmake/build/vfs_fonts.js";
+// pdfmake import - Vite/Rollup uyumlu
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 
 // pdfmake font'larını yükle
 pdfMake.vfs = pdfFonts.pdfMake.vfs;

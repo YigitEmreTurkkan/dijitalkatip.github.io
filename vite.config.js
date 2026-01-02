@@ -7,6 +7,15 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   base: "/dijitalkatip.github.io/",
+  resolve: {
+    alias: {
+      "pdfmake/build/pdfmake": "pdfmake/build/pdfmake.js",
+      "pdfmake/build/vfs_fonts": "pdfmake/build/vfs_fonts.js"
+    }
+  },
+  optimizeDeps: {
+    include: ["pdfmake", "pdfmake/build/pdfmake.js", "pdfmake/build/vfs_fonts.js"]
+  }
 });
 
 
