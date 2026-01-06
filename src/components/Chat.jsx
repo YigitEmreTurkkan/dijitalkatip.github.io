@@ -95,7 +95,7 @@ export function Chat({ apiKey }) {
       } catch (pythonError) {
         console.warn("Python PDF motoru başarısız, JavaScript motoruna geçiliyor:", pythonError);
         // Fallback: JavaScript motorunu kullan
-        await generatePetitionPdf(lastPetition);
+        //await generatePetitionPdf(lastPetition);
       }
     } catch (err) {
       console.error(err);
