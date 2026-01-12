@@ -169,28 +169,40 @@ function App() {
 
       const updates: Partial<Document> = {};
       
-      // Her güncellemeyi kontrol et ve ekle (null değilse ve değişmişse)
-      // HER MESAJDA en azından bir güncelleme yapılmalı
+      // Yeni JSON formatından field mapping (plaintiff -> plaintiff_details, body -> incident_narrative, result -> conclusion_request)
+      // Eğer AI 'plaintiff' için bir şey gönderdiyse (null değilse),
+      // Kutucuğun içini TAMAMEN bu yeni veriyle değiştir.
+      // Çünkü AI zaten eski veriyi de içine katarak gönderdi.
+      
       if (aiResponse.document_update.header !== null && 
           aiResponse.document_update.header !== document.header) {
         updates.header = aiResponse.document_update.header;
       }
-      if (aiResponse.document_update.plaintiff_details !== null && 
-          aiResponse.document_update.plaintiff_details !== document.plaintiff_details) {
-        updates.plaintiff_details = aiResponse.document_update.plaintiff_details;
+      
+      // Yeni format: plaintiff -> plaintiff_details
+      const plaintiffUpdate = aiResponse.document_update.plaintiff ?? aiResponse.document_update.plaintiff_details;
+      if (plaintiffUpdate !== null && plaintiffUpdate !== document.plaintiff_details) {
+        updates.plaintiff_details = plaintiffUpdate;
       }
-      if (aiResponse.document_update.defendant_details !== null && 
-          aiResponse.document_update.defendant_details !== document.defendant_details) {
-        updates.defendant_details = aiResponse.document_update.defendant_details;
+      
+      // Yeni format: defendant -> defendant_details
+      const defendantUpdate = aiResponse.document_update.defendant ?? aiResponse.document_update.defendant_details;
+      if (defendantUpdate !== null && defendantUpdate !== document.defendant_details) {
+        updates.defendant_details = defendantUpdate;
       }
+      
       if (aiResponse.document_update.subject !== null && 
           aiResponse.document_update.subject !== document.subject) {
         updates.subject = aiResponse.document_update.subject;
       }
-      if (aiResponse.document_update.incident_narrative !== null && 
-          aiResponse.document_update.incident_narrative !== document.incident_narrative) {
-        updates.incident_narrative = aiResponse.document_update.incident_narrative;
+      
+      // Yeni format: body -> incident_narrative
+      const bodyUpdate = aiResponse.document_update.body ?? aiResponse.document_update.incident_narrative;
+      if (bodyUpdate !== null && bodyUpdate !== document.incident_narrative) {
+        updates.incident_narrative = bodyUpdate;
       }
+      
+      // Legacy fields (backward compatibility)
       if (aiResponse.document_update.legal_grounds !== null && 
           aiResponse.document_update.legal_grounds !== document.legal_grounds) {
         updates.legal_grounds = aiResponse.document_update.legal_grounds;
@@ -199,9 +211,11 @@ function App() {
           aiResponse.document_update.evidence_list !== document.evidence_list) {
         updates.evidence_list = aiResponse.document_update.evidence_list;
       }
-      if (aiResponse.document_update.conclusion_request !== null && 
-          aiResponse.document_update.conclusion_request !== document.conclusion_request) {
-        updates.conclusion_request = aiResponse.document_update.conclusion_request;
+      
+      // Yeni format: result -> conclusion_request
+      const resultUpdate = aiResponse.document_update.result ?? aiResponse.document_update.conclusion_request;
+      if (resultUpdate !== null && resultUpdate !== document.conclusion_request) {
+        updates.conclusion_request = resultUpdate;
       }
 
       // HER MESAJDA belgeyi güncelle (en azından updated_at ile)

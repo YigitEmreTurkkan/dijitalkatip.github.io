@@ -33,13 +33,18 @@ export interface AIResponse {
   chat_message: string;
   document_update: {
     header: string | null;
-    plaintiff_details: string | null;
-    defendant_details: string | null;
+    plaintiff: string | null;  // Maps to plaintiff_details in Document
+    defendant: string | null;   // Maps to defendant_details in Document
     subject: string | null;
-    incident_narrative: string | null;
-    legal_grounds: string | null;
-    evidence_list: string | null;
-    conclusion_request: string | null;
+    body: string | null;        // Maps to incident_narrative in Document
+    result: string | null;      // Maps to conclusion_request in Document
+    // Legacy fields for backward compatibility
+    plaintiff_details?: string | null;
+    defendant_details?: string | null;
+    incident_narrative?: string | null;
+    legal_grounds?: string | null;
+    evidence_list?: string | null;
+    conclusion_request?: string | null;
   };
   status: 'in_progress' | 'completed';
 }
