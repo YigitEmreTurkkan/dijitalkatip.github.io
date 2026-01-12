@@ -5,6 +5,79 @@ import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { Case, Document, Message, AIResponse } from './types/database';
 import { generateAIResponse } from './services/aiService';
 
+// Data Accumulation: Mevcut ve yeni veriyi birleştir
+function mergePlaintiffData(existing: string, newData: string): string {
+  const existingLines = existing.split('\n').filter(line => line.trim());
+  const newLines = newData.split('\n').filter(line => line.trim());
+  
+  // Mevcut satırları map'e al (key -> value)
+  const existingMap = new Map<string, string>();
+  existingLines.forEach(line => {
+    const match = line.match(/^([^:]+):\s*(.+)$/);
+    if (match) {
+      const key = match[1].trim().toLowerCase();
+      existingMap.set(key, match[2].trim());
+    }
+  });
+  
+  // Yeni satırları ekle veya güncelle
+  newLines.forEach(line => {
+    const match = line.match(/^([^:]+):\s*(.+)$/);
+    if (match) {
+      const key = match[1].trim().toLowerCase();
+      existingMap.set(key, match[2].trim());
+    } else {
+      // Format uygun değilse direkt ekle
+      existingMap.set(line.trim(), '');
+    }
+  });
+  
+  // Map'i tekrar satırlara çevir
+  const result: string[] = [];
+  existingMap.forEach((value, key) => {
+    if (value) {
+      result.push(`${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`);
+    } else {
+      result.push(key);
+    }
+  });
+  
+  return result.join('\n');
+}
+
+function mergeDefendantData(existing: string, newData: string): string {
+  // Defendant için basit birleştirme (genelde tek satır)
+  if (existing.trim() && newData.trim()) {
+    // Eğer yeni veri mevcut veriyi içermiyorsa birleştir
+    if (!newData.includes(existing) && !existing.includes(newData)) {
+      return `${existing}\n${newData}`;
+    }
+    // Eğer yeni veri daha kapsamlıysa onu kullan
+    if (newData.length > existing.length) {
+      return newData;
+    }
+    return existing;
+  }
+  return newData || existing;
+}
+
+function mergeBodyData(existing: string, newData: string): string {
+  // Body için: Eğer yeni veri mevcut veriyi içermiyorsa ekle
+  if (existing.trim() && newData.trim()) {
+    // Eğer yeni veri mevcut verinin bir parçası değilse ekle
+    if (!existing.includes(newData) && !newData.includes(existing)) {
+      // Yeni paragraf olarak ekle
+      return `${existing}\n\n${newData}`;
+    }
+    // Eğer yeni veri daha kapsamlıysa onu kullan
+    if (newData.length > existing.length * 1.5) {
+      return newData;
+    }
+    return existing;
+  }
+  return newData || existing;
+}
+
 function App() {
   const [currentCase, setCurrentCase] = useState<Case | null>(null);
   const [document, setDocument] = useState<Document | null>(null);
@@ -180,15 +253,33 @@ function App() {
       }
       
       // Yeni format: plaintiff -> plaintiff_details
+      // Data Accumulation: AI'dan gelen değeri mevcut değerle birleştir
       const plaintiffUpdate = aiResponse.document_update.plaintiff ?? aiResponse.document_update.plaintiff_details;
-      if (plaintiffUpdate !== null && plaintiffUpdate !== document.plaintiff_details) {
-        updates.plaintiff_details = plaintiffUpdate;
+      if (plaintiffUpdate !== null) {
+        if (document.plaintiff_details && document.plaintiff_details.trim()) {
+          // Mevcut bilgileri koru ve yeni bilgileri ekle
+          const merged = mergePlaintiffData(document.plaintiff_details, plaintiffUpdate);
+          if (merged !== document.plaintiff_details) {
+            updates.plaintiff_details = merged;
+          }
+        } else {
+          // Mevcut bilgi yoksa direkt kullan
+          updates.plaintiff_details = plaintiffUpdate;
+        }
       }
       
       // Yeni format: defendant -> defendant_details
       const defendantUpdate = aiResponse.document_update.defendant ?? aiResponse.document_update.defendant_details;
-      if (defendantUpdate !== null && defendantUpdate !== document.defendant_details) {
-        updates.defendant_details = defendantUpdate;
+      if (defendantUpdate !== null) {
+        if (document.defendant_details && document.defendant_details.trim()) {
+          // Mevcut bilgileri koru ve yeni bilgileri ekle
+          const merged = mergeDefendantData(document.defendant_details, defendantUpdate);
+          if (merged !== document.defendant_details) {
+            updates.defendant_details = merged;
+          }
+        } else {
+          updates.defendant_details = defendantUpdate;
+        }
       }
       
       if (aiResponse.document_update.subject !== null && 
@@ -197,9 +288,18 @@ function App() {
       }
       
       // Yeni format: body -> incident_narrative
+      // Data Accumulation: Body için de birleştirme yap
       const bodyUpdate = aiResponse.document_update.body ?? aiResponse.document_update.incident_narrative;
-      if (bodyUpdate !== null && bodyUpdate !== document.incident_narrative) {
-        updates.incident_narrative = bodyUpdate;
+      if (bodyUpdate !== null) {
+        if (document.incident_narrative && document.incident_narrative.trim()) {
+          // Mevcut anlatımı koru, yeni bilgiyi ekle
+          const merged = mergeBodyData(document.incident_narrative, bodyUpdate);
+          if (merged !== document.incident_narrative) {
+            updates.incident_narrative = merged;
+          }
+        } else {
+          updates.incident_narrative = bodyUpdate;
+        }
       }
       
       // Legacy fields (backward compatibility)
