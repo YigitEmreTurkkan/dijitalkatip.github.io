@@ -138,7 +138,6 @@ class PathHoister {
         return path;
       }
     } while (path = path.parentPath);
-    return path;
   }
   hasOwnParamBindings(scope) {
     for (const name of Object.keys(this.bindings)) {
@@ -164,7 +163,7 @@ class PathHoister {
       uid = jsxExpressionContainer(uid);
     }
     this.path.replaceWith(cloneNode(uid));
-    return attached.isVariableDeclarator() ? attached.get("init") : attached.get("declarations.0.init");
+    return attachTo.isVariableDeclarator() ? attached.get("init") : attached.get("declarations.0.init");
   }
 }
 exports.default = PathHoister;
