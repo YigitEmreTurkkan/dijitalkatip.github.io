@@ -30,13 +30,20 @@ async function callGeminiViaProxy(
 
   const data = await response.json();
   
-  // Worker returns Gemini API response format
+  // Worker returns { text: "..." } format (from o repo)
+  if (data.text) {
+    return data.text;
+  }
+  
+  // Fallback: Check for Gemini API format (in case worker is updated)
   if (data.candidates && data.candidates[0] && data.candidates[0].content) {
     const text = data.candidates[0].content.parts[0].text;
     return text;
   }
   
-  throw new Error("Geçersiz API yanıtı");
+  // Log the actual response for debugging
+  console.error('Unexpected response format:', data);
+  throw new Error(`Geçersiz API yanıtı: ${JSON.stringify(data)}`);
 }
 
 export async function generateAIResponse(
