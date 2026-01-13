@@ -5,30 +5,21 @@ import { MODEL_NAME, SYSTEM_PROMPT } from '../utils/constants';
 const PROXY_URL = "https://yigit-gemini-proxy.yigit-turkkan.workers.dev";
 
 // Proxy üzerinden Gemini API çağrısı yap
-async function callGeminiViaProxy(prompt: string): Promise<string> {
-  const response = await fetch(`${PROXY_URL}/v1beta/models/${MODEL_NAME}:generateContent`, {
+async function callGeminiViaProxy(
+  message: string, 
+  systemInstruction: string,
+  history: Array<{ role: string; parts: Array<{ text: string }> }> = []
+): Promise<string> {
+  // Send to proxy (worker expects: message, history, systemInstruction)
+  const response = await fetch(PROXY_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-        responseMimeType: "application/json"
-      },
-      systemInstruction: {
-        parts: [{
-          text: SYSTEM_PROMPT
-        }]
-      }
+      message: message,
+      history: history,
+      systemInstruction: systemInstruction,
     })
   });
 
@@ -39,7 +30,7 @@ async function callGeminiViaProxy(prompt: string): Promise<string> {
 
   const data = await response.json();
   
-  // Gemini API response formatından text'i çıkar
+  // Worker returns Gemini API response format
   if (data.candidates && data.candidates[0] && data.candidates[0].content) {
     const text = data.candidates[0].content.parts[0].text;
     return text;
@@ -64,13 +55,20 @@ Mevcut Belge Bilgileri:
 - Deliller: ${document.evidence_list || 'Henüz eklenmedi'}
 `;
 
+    // Convert messages to Gemini API format for history
+    const geminiHistory = messages.slice(-10).map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
+
     const conversationHistory = messages.slice(-10).map(msg => 
       `${msg.role === 'user' ? 'Kullanıcı' : 'Asistan'}: ${msg.content}`
     ).join('\n');
 
-    const fullPrompt = `${SYSTEM_PROMPT}\n\n${documentContext}\n\n${conversationHistory ? conversationHistory + '\n\n' : ''}Kullanıcı: ${userMessage}\n\nAsistan:`;
+    // Build system instruction with document context
+    const fullSystemInstruction = `${SYSTEM_PROMPT}\n\n${documentContext}\n\n${conversationHistory ? conversationHistory + '\n\n' : ''}`;
 
-    const aiText = await callGeminiViaProxy(fullPrompt);
+    const aiText = await callGeminiViaProxy(userMessage, fullSystemInstruction, geminiHistory);
 
     let jsonText = aiText.trim();
     const codeBlockMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);

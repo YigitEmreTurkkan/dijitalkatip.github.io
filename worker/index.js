@@ -1,6 +1,7 @@
 /**
  * Cloudflare Worker Proxy for Gemini API
  * This worker hides the API key from the client-side code
+ * Accepts Gemini API format directly and forwards to Gemini API
  */
 
 export default {
@@ -38,14 +39,14 @@ export default {
         );
       }
 
-      // Parse the request body
+      // Parse the request body (Gemini API format: contents, generationConfig, systemInstruction)
       const body = await request.json();
       
       // Extract the path from the URL (e.g., /v1beta/models/gemini-2.0-flash:generateContent)
       const url = new URL(request.url);
       const path = url.pathname;
 
-      // Forward to Gemini API
+      // Forward to Gemini API - direkt Gemini API formatını forward et
       const geminiUrl = `https://generativelanguage.googleapis.com${path}?key=${apiKey}`;
       
       const geminiResponse = await fetch(geminiUrl, {
