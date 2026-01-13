@@ -1,4 +1,4 @@
-name: Build and Deploy Static Site
+name: Build and Deploy
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
         with:
           path: ./dist
 
-  deploy:
+  deploy-pages:
     needs: build
     runs-on: ubuntu-latest
     environment:

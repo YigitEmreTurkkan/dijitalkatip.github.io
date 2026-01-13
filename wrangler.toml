@@ -1,0 +1,6 @@
+name = "yigit-gemini-proxy"
+compatibility_date = "2026-01-13"
+main = "worker/index.js"
+
+# API key should be set as a secret in Cloudflare:
+# wrangler secret put GEMINI_API_KEY
