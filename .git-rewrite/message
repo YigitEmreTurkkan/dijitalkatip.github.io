@@ -1,0 +1,1 @@
+Fix JSON parsing robustness and caseType scope issues, remove vite.svg reference
