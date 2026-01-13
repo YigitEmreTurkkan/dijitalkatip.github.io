@@ -1,4 +1,4 @@
-name = "yigit-gemini-proxy"
+name = "yigit-gemini-proxy2"
 compatibility_date = "2026-01-13"
 main = "worker/index.js"
 
