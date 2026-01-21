@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { FileText, Download } from 'lucide-react';
 import { Document } from '../types/database';
 import { generatePDF } from '../utils/pdfGenerator';
@@ -7,6 +8,8 @@ interface DocumentViewerProps {
 }
 
 export function DocumentViewer({ document }: DocumentViewerProps) {
+  const pdfRef = useRef<HTMLDivElement>(null);
+
   if (!document) {
     return (
       <div className="h-full flex items-center justify-center bg-slate-50">
@@ -18,10 +21,9 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
     );
   }
 
-  const handleDownloadPDF = () => {
-    if (document) {
-      generatePDF(document);
-    }
+  const handleDownloadPDF = async () => {
+    if (!document || !pdfRef.current) return;
+    await generatePDF(pdfRef.current, { subject: document.subject });
   };
 
   return (
@@ -39,7 +41,10 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
       )}
       
       <div className="max-w-4xl mx-auto p-8 md:p-12 pb-24">
-        <div className="bg-white shadow-sm border border-slate-200 rounded-lg p-8 md:p-12 space-y-6 font-serif">
+        <div
+          ref={pdfRef}
+          className="bg-white shadow-sm border border-slate-200 rounded-lg p-8 md:p-12 space-y-6 font-serif"
+        >
           {document.header && (
             <div className="text-center font-bold text-lg mb-8">
               {document.header}
