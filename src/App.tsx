@@ -9,7 +9,7 @@ import { generateAIResponse } from './services/aiService';
 function mergePlaintiffData(existing: string, newData: string): string {
   const existingLines = existing.split('\n').filter(line => line.trim());
   const newLines = newData.split('\n').filter(line => line.trim());
-  
+
   // Mevcut satırları map'e al (key -> value)
   const existingMap = new Map<string, string>();
   existingLines.forEach(line => {
@@ -19,7 +19,7 @@ function mergePlaintiffData(existing: string, newData: string): string {
       existingMap.set(key, match[2].trim());
     }
   });
-  
+
   // Yeni satırları ekle veya güncelle
   newLines.forEach(line => {
     const match = line.match(/^([^:]+):\s*(.+)$/);
@@ -31,7 +31,7 @@ function mergePlaintiffData(existing: string, newData: string): string {
       existingMap.set(line.trim(), '');
     }
   });
-  
+
   // Map'i tekrar satırlara çevir
   const result: string[] = [];
   existingMap.forEach((value, key) => {
@@ -41,7 +41,7 @@ function mergePlaintiffData(existing: string, newData: string): string {
       result.push(key);
     }
   });
-  
+
   return result.join('\n');
 }
 
@@ -241,17 +241,17 @@ function App() {
       setMessages((prev) => [...prev, assistantMessage]);
 
       const updates: Partial<Document> = {};
-      
+
       // Yeni JSON formatından field mapping (plaintiff -> plaintiff_details, body -> incident_narrative, result -> conclusion_request)
       // Eğer AI 'plaintiff' için bir şey gönderdiyse (null değilse),
       // Kutucuğun içini TAMAMEN bu yeni veriyle değiştir.
       // Çünkü AI zaten eski veriyi de içine katarak gönderdi.
-      
-      if (aiResponse.document_update.header !== null && 
-          aiResponse.document_update.header !== document.header) {
+
+      if (aiResponse.document_update.header !== null &&
+        aiResponse.document_update.header !== document.header) {
         updates.header = aiResponse.document_update.header;
       }
-      
+
       // Yeni format: plaintiff -> plaintiff_details
       // Data Accumulation: AI'dan gelen değeri mevcut değerle birleştir
       const plaintiffUpdate = aiResponse.document_update.plaintiff ?? aiResponse.document_update.plaintiff_details;
@@ -267,7 +267,7 @@ function App() {
           updates.plaintiff_details = plaintiffUpdate;
         }
       }
-      
+
       // Yeni format: defendant -> defendant_details
       const defendantUpdate = aiResponse.document_update.defendant ?? aiResponse.document_update.defendant_details;
       if (defendantUpdate !== null) {
@@ -281,12 +281,12 @@ function App() {
           updates.defendant_details = defendantUpdate;
         }
       }
-      
-      if (aiResponse.document_update.subject !== null && 
-          aiResponse.document_update.subject !== document.subject) {
+
+      if (aiResponse.document_update.subject !== null &&
+        aiResponse.document_update.subject !== document.subject) {
         updates.subject = aiResponse.document_update.subject;
       }
-      
+
       // Yeni format: body -> incident_narrative
       // Data Accumulation: Body için de birleştirme yap
       const bodyUpdate = aiResponse.document_update.body ?? aiResponse.document_update.incident_narrative;
@@ -301,17 +301,17 @@ function App() {
           updates.incident_narrative = bodyUpdate;
         }
       }
-      
+
       // Legacy fields (backward compatibility)
-      if (aiResponse.document_update.legal_grounds !== null && 
-          aiResponse.document_update.legal_grounds !== document.legal_grounds) {
+      if (aiResponse.document_update.legal_grounds !== null &&
+        aiResponse.document_update.legal_grounds !== document.legal_grounds) {
         updates.legal_grounds = aiResponse.document_update.legal_grounds;
       }
-      if (aiResponse.document_update.evidence_list !== null && 
-          aiResponse.document_update.evidence_list !== document.evidence_list) {
+      if (aiResponse.document_update.evidence_list !== null &&
+        aiResponse.document_update.evidence_list !== document.evidence_list) {
         updates.evidence_list = aiResponse.document_update.evidence_list;
       }
-      
+
       // Yeni format: result -> conclusion_request
       const resultUpdate = aiResponse.document_update.result ?? aiResponse.document_update.conclusion_request;
       if (resultUpdate !== null && resultUpdate !== document.conclusion_request) {
@@ -359,16 +359,58 @@ function App() {
     }
   };
 
+  // Mobile tab state
+  const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
+
+  // Switch to document tab when AI updates the document
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+      // Optional: Auto-switch to document tab on mobile when new content arrives
+      // setActiveTab('document'); 
+    }
+  }, [messages]);
+
   return (
-    <div className="h-screen flex flex-col md:flex-row overflow-hidden">
-      <div className="w-full md:w-1/2 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-slate-300">
+    <div className="h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-slate-50">
+      {/* Mobile Tab Navigation */}
+      <div className="md:hidden flex border-b border-slate-200 bg-white">
+        <button
+          onClick={() => setActiveTab('chat')}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'chat'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-slate-500 hover:text-slate-800'
+            }`}
+        >
+          Sohbet
+        </button>
+        <button
+          onClick={() => setActiveTab('document')}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'document'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-slate-500 hover:text-slate-800'
+            }`}
+        >
+          Dilekçe
+        </button>
+      </div>
+
+      {/* Chat Interface Area */}
+      <div className={`
+        w-full md:w-1/2 h-full border-r border-slate-300
+        ${activeTab === 'chat' ? 'flex' : 'hidden md:flex'}
+      `}>
         <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
         />
       </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full">
+
+      {/* Document Viewer Area */}
+      <div className={`
+        w-full md:w-1/2 h-full
+        ${activeTab === 'document' ? 'flex' : 'hidden md:flex'}
+      `}>
         <DocumentViewer document={document} />
       </div>
     </div>
