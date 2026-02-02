@@ -26,10 +26,17 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
     await generatePDF(pdfRef.current, { subject: document.subject });
   };
 
+  const hasContent = document && (
+    document.header ||
+    document.subject ||
+    document.incident_narrative ||
+    document.plaintiff_details
+  );
+
   return (
     <div className="h-full overflow-auto bg-white relative">
       {/* PDF İndirme Butonu */}
-      {document && document.header && (
+      {hasContent && (
         <button
           onClick={handleDownloadPDF}
           className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-10 transition-colors"
@@ -39,7 +46,7 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
           <span>PDF İndir</span>
         </button>
       )}
-      
+
       <div className="max-w-4xl mx-auto p-8 md:p-12 pb-24">
         <div
           ref={pdfRef}

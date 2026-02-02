@@ -70,27 +70,26 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-4 ${
-                message.role === 'user'
+              className={`max-w-[85%] rounded-2xl p-5 text-lg ${message.role === 'user'
                   ? 'bg-slate-800 text-white'
                   : 'bg-white text-slate-800 shadow-sm border border-slate-200'
-              }`}
+                }`}
             >
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
             </div>
           </div>
         ))}
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white text-slate-800 rounded-lg p-4 shadow-sm border border-slate-200">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="bg-white text-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
-                <span className="text-sm text-slate-600">Yanıt hazırlanıyor...</span>
+                <span className="text-lg text-slate-600">Yanıt hazırlanıyor...</span>
               </div>
             </div>
           </div>
@@ -99,23 +98,23 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-white border-t border-slate-200">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="p-4 bg-white border-t border-slate-200 relative z-20">
+        <form onSubmit={handleSubmit} className="flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Hukuki sorununuzu anlatın..."
+            placeholder="Ne yapmak istiyorsunuz? Buraya yazın..."
             disabled={isLoading}
-            className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+            className="flex-1 px-5 py-4 text-lg border-2 border-slate-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-slate-800/20 focus:border-slate-800 disabled:bg-slate-100 disabled:cursor-not-allowed placeholder:text-slate-400"
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="bg-slate-800 text-white px-6 py-3 rounded-lg hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="bg-slate-900 text-white px-8 py-4 rounded-xl hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-lg active:scale-95"
           >
-            <Send className="w-5 h-5" />
-            <span className="hidden sm:inline">Gönder</span>
+            <Send className="w-7 h-7" />
+            <span className="hidden sm:inline text-lg font-medium">Gönder</span>
           </button>
         </form>
       </div>

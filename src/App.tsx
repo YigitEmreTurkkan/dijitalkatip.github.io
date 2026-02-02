@@ -258,7 +258,7 @@ function App() {
       if (plaintiffUpdate !== null) {
         if (document.plaintiff_details && document.plaintiff_details.trim()) {
           // Mevcut bilgileri koru ve yeni bilgileri ekle
-          const merged = mergePlaintiffData(document.plaintiff_details, plaintiffUpdate);
+          const merged = mergePlaintiffData(document.plaintiff_details, plaintiffUpdate ?? '');
           if (merged !== document.plaintiff_details) {
             updates.plaintiff_details = merged;
           }
@@ -273,7 +273,7 @@ function App() {
       if (defendantUpdate !== null) {
         if (document.defendant_details && document.defendant_details.trim()) {
           // Mevcut bilgileri koru ve yeni bilgileri ekle
-          const merged = mergeDefendantData(document.defendant_details, defendantUpdate);
+          const merged = mergeDefendantData(document.defendant_details, defendantUpdate ?? '');
           if (merged !== document.defendant_details) {
             updates.defendant_details = merged;
           }
@@ -293,7 +293,7 @@ function App() {
       if (bodyUpdate !== null) {
         if (document.incident_narrative && document.incident_narrative.trim()) {
           // Mevcut anlatımı koru, yeni bilgiyi ekle
-          const merged = mergeBodyData(document.incident_narrative, bodyUpdate);
+          const merged = mergeBodyData(document.incident_narrative, bodyUpdate ?? '');
           if (merged !== document.incident_narrative) {
             updates.incident_narrative = merged;
           }
@@ -361,42 +361,29 @@ function App() {
 
   // Mobile tab state
   const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
+  const [hasUnreadChanges, setHasUnreadChanges] = useState(false);
 
   // Switch to document tab when AI updates the document
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
-      // Optional: Auto-switch to document tab on mobile when new content arrives
-      // setActiveTab('document'); 
+      if (activeTab !== 'document') {
+        setHasUnreadChanges(true);
+      }
     }
-  }, [messages]);
+  }, [messages, activeTab]);
+
+  const handleTabChange = (tab: 'chat' | 'document') => {
+    setActiveTab(tab);
+    if (tab === 'document') {
+      setHasUnreadChanges(false);
+    }
+  };
 
   return (
     <div className="h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-slate-50">
-      {/* Mobile Tab Navigation */}
-      <div className="md:hidden flex border-b border-slate-200 bg-white">
-        <button
-          onClick={() => setActiveTab('chat')}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'chat'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-            }`}
-        >
-          Sohbet
-        </button>
-        <button
-          onClick={() => setActiveTab('document')}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'document'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-            }`}
-        >
-          Dilekçe
-        </button>
-      </div>
-
       {/* Chat Interface Area */}
       <div className={`
-        w-full md:w-1/2 h-full border-r border-slate-300
+        w-full md:w-1/2 h-full border-r border-slate-300 pb-20 md:pb-0
         ${activeTab === 'chat' ? 'flex' : 'hidden md:flex'}
       `}>
         <ChatInterface
@@ -408,10 +395,43 @@ function App() {
 
       {/* Document Viewer Area */}
       <div className={`
-        w-full md:w-1/2 h-full
+        w-full md:w-1/2 h-full pb-20 md:pb-0
         ${activeTab === 'document' ? 'flex' : 'hidden md:flex'}
       `}>
         <DocumentViewer document={document} />
+      </div>
+
+      {/* Mobile Bottom Navigation - Large Buttons for Accessibility */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <button
+          onClick={() => handleTabChange('chat')}
+          className={`flex-1 flex flex-col items-center justify-center p-4 gap-1 transition-colors ${activeTab === 'chat'
+            ? 'text-blue-600 bg-blue-50'
+            : 'text-slate-500 hover:bg-slate-50'
+            }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span className="text-sm font-bold">Yazışma</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('document')}
+          className={`flex-1 flex flex-col items-center justify-center p-4 gap-1 transition-colors relative ${activeTab === 'document'
+            ? 'text-blue-600 bg-blue-50'
+            : 'text-slate-500 hover:bg-slate-50'
+            }`}
+        >
+          {hasUnreadChanges && (
+            <span className="absolute top-3 right-1/4 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-sm ring-2 ring-white" />
+          )}
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <span className="text-sm font-bold">Dilekçeni Gör</span>
+        </button>
       </div>
     </div>
   );
